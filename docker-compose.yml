@@ -1,0 +1,111 @@
+services:
+    streaming-1:
+        build:
+            context: .
+            dockerfile: docker/Dockerfile
+        image: eumirasoft/kafka:4.0.1
+        container_name: streaming-1
+        restart: always
+        ports:
+            - "9094:9094"
+        healthcheck:
+            test: ["CMD", "/opt/kafka/bin/kafka-broker-api-versions.sh", "--bootstrap-server", "localhost:9092"]
+            interval: 15s
+            timeout: 10s
+            retries: 3
+            start_period: 30s
+        environment:
+            - KAFKA_NODE_ID=1
+            - KAFKA_CLUSTER_ID=620a2732-5a21-4b1a-8c8c-1234567890ab
+            - KAFKA_PROCESS_ROLES=broker,controller
+            - KAFKA_ADVERTISED_LISTENERS=INTERNAL://streaming-1:9092,EXTERNAL://localhost:9094
+            - KAFKA_CONTROLLER_QUORUM_VOTERS=1@streaming-1:9093,2@streaming-2:9093,3@streaming-3:9093
+            - KAFKA_INTER_BROKER_LISTENER_NAME=INTERNAL
+            - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+            - KAFKA_LISTENERS=INTERNAL://:9092,EXTERNAL://:9094,CONTROLLER://:9093
+            - KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER
+        volumes:
+            - streaming-1-data:/var/lib/kafka/data
+
+    streaming-2:
+        image: eumirasoft/kafka:4.0.1
+        container_name: streaming-2
+        restart: always
+        ports:
+            - "9095:9095"
+        healthcheck:
+            test: ["CMD", "/opt/kafka/bin/kafka-broker-api-versions.sh", "--bootstrap-server", "localhost:9092"]
+            interval: 15s
+            timeout: 10s
+            retries: 3
+            start_period: 30s
+        environment:
+            - KAFKA_NODE_ID=2
+            - KAFKA_CLUSTER_ID=620a2732-5a21-4b1a-8c8c-1234567890ab
+            - KAFKA_PROCESS_ROLES=broker,controller
+            - KAFKA_ADVERTISED_LISTENERS=INTERNAL://streaming-2:9092,EXTERNAL://localhost:9095
+            - KAFKA_CONTROLLER_QUORUM_VOTERS=1@streaming-1:9093,2@streaming-2:9093,3@streaming-3:9093
+            - KAFKA_INTER_BROKER_LISTENER_NAME=INTERNAL
+            - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+            - KAFKA_LISTENERS=INTERNAL://:9092,EXTERNAL://:9095,CONTROLLER://:9093
+            - KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER
+        volumes:
+            - streaming-2-data:/var/lib/kafka/data
+
+    streaming-3:
+        image: eumirasoft/kafka:4.0.1
+        container_name: streaming-3
+        restart: always
+        ports:
+            - "9096:9096"
+        healthcheck:
+            test: ["CMD", "/opt/kafka/bin/kafka-broker-api-versions.sh", "--bootstrap-server", "localhost:9092"]
+            interval: 15s
+            timeout: 10s
+            retries: 3
+            start_period: 30s
+        environment:
+            - KAFKA_NODE_ID=3
+            - KAFKA_CLUSTER_ID=620a2732-5a21-4b1a-8c8c-1234567890ab
+            - KAFKA_PROCESS_ROLES=broker,controller
+            - KAFKA_ADVERTISED_LISTENERS=INTERNAL://streaming-3:9092,EXTERNAL://localhost:9096
+            - KAFKA_CONTROLLER_QUORUM_VOTERS=1@streaming-1:9093,2@streaming-2:9093,3@streaming-3:9093
+            - KAFKA_INTER_BROKER_LISTENER_NAME=INTERNAL
+            - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+            - KAFKA_LISTENERS=INTERNAL://:9092,EXTERNAL://:9096,CONTROLLER://:9093
+            - KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER
+        volumes:
+            - streaming-3-data:/var/lib/kafka/data
+
+    schema-registry:
+        image: ghcr.io/aiven/karapace:3.7.1
+        container_name: schema-registry
+        restart: always
+        ports:
+            - "8081:8081"
+        depends_on:
+            - streaming-1
+            - streaming-2
+            - streaming-3
+        entrypoint:
+            - /bin/bash
+            - /opt/karapace/start.sh
+            - registry
+        environment:
+            - KARAPACE_HOST=0.0.0.0
+            - KARAPACE_PORT=8081
+            - KARAPACE_BOOTSTRAP_URI=streaming-1:9092,streaming-2:9092,streaming-3:9092
+            - KARAPACE_TOPIC_NAME=_schemas
+            - KARAPACE_CLIENT_ID=karapace-registry
+            - KARAPACE_GROUP_ID=karapace-registry-group
+            - KARAPACE_MASTER_ELIGIBILITY=true
+            - KARAPACE_LOG_LEVEL=INFO
+
+volumes:
+    streaming-1-data:
+        name: streaming-1-data
+    streaming-2-data:
+        name: streaming-2-data
+    streaming-3-data:
+        name: streaming-3-data
+
