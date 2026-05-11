@@ -1,7 +1,7 @@
 /**
  * UsingOfFlinkKafkaSource.scala
  * @author
- *   Gerardo Jaramillo
+ *   Gerardo Jaramillo (https://me@gerardojaramillo.dev)
  */
 
 package lab
@@ -23,7 +23,7 @@ object UsingOfFlinkKafkaSource {
 
     val kafkaSource: KafkaSource[String] = KafkaSource
       .builder()
-      .setBootstrapServers("localhost:9092")
+      .setBootstrapServers("localhost:9094")
       .setGroupId("wherever")
       .setTopics(List.of("mytopic"))
       .setStartingOffsets(OffsetsInitializer.earliest())

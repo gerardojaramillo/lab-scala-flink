@@ -14,13 +14,19 @@ lazy val root = (project in file("."))
   .settings(
     name := "lab-scala-flink",
     fork := true,
-    libraryDependencies += "org.flinkextended" %% "flink-scala-api-2" % flinkExtendedVer,
-    libraryDependencies += "org.apache.flink" % "flink-streaming-java" % flinkVer,
-    libraryDependencies += "org.apache.flink" % "flink-clients" % flinkVer,
-    libraryDependencies += "org.apache.flink" % "flink-connector-files" % flinkVer,
-    libraryDependencies += "org.apache.flink" % "flink-csv" % flinkVer,
-    libraryDependencies += "org.apache.flink" % "flink-connector-kafka" % flinkKafkaConectorVer,
 
-    libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVer,
-    libraryDependencies += munit % Test
+    libraryDependencies ++= Seq(
+      "org.flinkextended" %% "flink-scala-api-2" % flinkExtendedVer,
+
+      "org.apache.flink" % "flink-streaming-java" % flinkVer,
+      "org.apache.flink" % "flink-clients" % flinkVer,
+
+      "org.apache.flink" % "flink-connector-files" % flinkVer,
+      "org.apache.flink" % "flink-csv" % flinkVer,
+      "org.apache.flink" % "flink-connector-kafka" % flinkKafkaConectorVer,
+
+      "org.apache.flink" % "flink-statebackend-rocksdb" % flinkVer % Provided,
+
+      munit % Test
+    )
   )

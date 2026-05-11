@@ -9,7 +9,7 @@ services:
         ports:
             - "9094:9094"
         healthcheck:
-            test: ["CMD", "/opt/kafka/bin/kafka-broker-api-versions.sh", "--bootstrap-server", "localhost:9092"]
+            test: [ "CMD", "/opt/kafka/bin/kafka-broker-api-versions.sh", "--bootstrap-server", "localhost:9092" ]
             interval: 15s
             timeout: 10s
             retries: 3
@@ -34,7 +34,7 @@ services:
         ports:
             - "9095:9095"
         healthcheck:
-            test: ["CMD", "/opt/kafka/bin/kafka-broker-api-versions.sh", "--bootstrap-server", "localhost:9092"]
+            test: [ "CMD", "/opt/kafka/bin/kafka-broker-api-versions.sh", "--bootstrap-server", "localhost:9092" ]
             interval: 15s
             timeout: 10s
             retries: 3
@@ -59,7 +59,7 @@ services:
         ports:
             - "9096:9096"
         healthcheck:
-            test: ["CMD", "/opt/kafka/bin/kafka-broker-api-versions.sh", "--bootstrap-server", "localhost:9092"]
+            test: [ "CMD", "/opt/kafka/bin/kafka-broker-api-versions.sh", "--bootstrap-server", "localhost:9092" ]
             interval: 15s
             timeout: 10s
             retries: 3
@@ -101,6 +101,41 @@ services:
             - KARAPACE_MASTER_ELIGIBILITY=true
             - KARAPACE_LOG_LEVEL=INFO
 
+    jobmanager:
+        image: flink:2.1-java17
+        container_name: aether-jobmanager
+        ports:
+            - "8082:8082" # Web UI y REST API
+        command: jobmanager
+        environment:
+            # Inyección dinámica de configuración (flink-conf.yaml)
+            FLINK_PROPERTIES: |
+                jobmanager.rpc.address: jobmanager
+                state.backend: rocksdb
+                state.checkpoints.dir: file:///opt/flink/checkpoints
+        volumes:
+            - flink_checkpoints:/opt/flink/checkpoints
+            - ./data:/opt/data # Mapeo de tus CSV locales al contenedor
+
+    # --- 3. The Data Plane (Flink TaskManager) ---
+    taskmanager:
+        image: flink:2.1-java17
+        container_name: aether-taskmanager
+        depends_on:
+            - jobmanager
+        command: taskmanager
+        scale: 1 # Incrementa esto con 'docker-compose up --scale taskmanager=3'
+        environment:
+            FLINK_PROPERTIES: |
+                jobmanager.rpc.address: jobmanager
+                taskmanager.numberOfTaskSlots: 4
+                taskmanager.memory.process.size: 1728m
+                state.backend: rocksdb
+                state.checkpoints.dir: file:///opt/flink/checkpoints
+        volumes:
+            - flink_checkpoints:/opt/flink/checkpoints
+            - ./data:/opt/data
+
 volumes:
     streaming-1-data:
         name: streaming-1-data
@@ -108,4 +143,5 @@ volumes:
         name: streaming-2-data
     streaming-3-data:
         name: streaming-3-data
-
+    flink_checkpoints:
+        driver: local
