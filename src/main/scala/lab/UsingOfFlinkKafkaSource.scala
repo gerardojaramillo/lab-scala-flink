@@ -33,14 +33,19 @@ object UsingOfFlinkKafkaSource {
       .setDeserializer(new KafkaRecordDeserializationSchema[String] {
         override def deserialize(
             record: ConsumerRecord[Array[Byte], Array[Byte]],
-            out: Collector[String]): Unit = ???
+            out: Collector[String]): Unit = {
+          out.collect(new String(record.value(), "UTF-8"))
+        }
         override def getProducedType: TypeInformation[String] =
           TypeInformation.of(classOf[String])
       })
       .build()
     val env = StreamExecutionEnvironment.getExecutionEnvironment
     val stream =
-      env.fromSource(kafkaSource, WatermarkStrategy.noWatermarks(), "")
+      env.fromSource(
+        kafkaSource,
+        WatermarkStrategy.noWatermarks(),
+        "Kafka Source")
     stream.print
     env.execute("kafkaSource")
   }
