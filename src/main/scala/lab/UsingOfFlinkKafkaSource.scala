@@ -23,34 +23,30 @@ import java.util.List
 
 object UsingOfFlinkKafkaSource {
 
-  def main(args: Array[String]): Unit = {
-
+  def kafkaSource(): Unit = {
     val kafkaSource: KafkaSource[String] = KafkaSource
       .builder()
       .setBootstrapServers("localhost:9094,localhost:9095")
-      .setGroupId("flink-topic-group")
       .setTopics(List.of("flink-topic"))
+      .setGroupId("flink-topic-group")
       .setStartingOffsets(OffsetsInitializer.earliest())
-      .setDeserializer(
-        new KafkaRecordDeserializationSchema[String] {
-          override def deserialize(
-              record: ConsumerRecord[Array[Byte], Array[Byte]],
-              out: Collector[String]): Unit =
-            out.collect(new String(record.value(), "UTF-8"))
-          override def getProducedType: TypeInformation[String] =
-            TypeInformation.of(classOf[String])
-        }
-      )
+      .setDeserializer(new KafkaRecordDeserializationSchema[String] {
+        override def deserialize(
+            record: ConsumerRecord[Array[Byte], Array[Byte]],
+            out: Collector[String]): Unit = ???
+        override def getProducedType: TypeInformation[String] =
+          TypeInformation.of(classOf[String])
+      })
       .build()
-
     val env = StreamExecutionEnvironment.getExecutionEnvironment
-    val stream = env.fromSource(
-      kafkaSource,
-      WatermarkStrategy.noWatermarks(),
-      "Kafka-Telemetry-Source")
+    val stream =
+      env.fromSource(kafkaSource, WatermarkStrategy.noWatermarks(), "")
+    stream.print
+    env.execute("kafkaSource")
+  }
 
-    stream.print()
-    env.execute("Job")
+  def main(args: Array[String]): Unit = {
+    kafkaSource()
   }
 
 }
