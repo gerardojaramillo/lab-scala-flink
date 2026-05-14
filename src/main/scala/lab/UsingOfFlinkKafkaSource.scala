@@ -6,18 +6,24 @@
 
 package lab
 
+import magnolia1.Monadic.Ops
 import org.apache.flink.api.common.eventtime.WatermarkStrategy
 import org.apache.flink.api.common.typeinfo.TypeInformation
+import org.apache.flink.connector.file.src.FileSource
+import org.apache.flink.connector.file.src.reader.TextLineInputFormat
 import org.apache.flink.connector.kafka.source.KafkaSource
 import org.apache.flink.connector.kafka.source.KafkaSourceBuilder
 import org.apache.flink.connector.kafka.source.enumerator.initializer.OffsetsInitializer
 import org.apache.flink.connector.kafka.source.enumerator.subscriber.KafkaSubscriber
 import org.apache.flink.connector.kafka.source.reader.deserializer.KafkaRecordDeserializationSchema
+import org.apache.flink.core.fs.Path
+import org.apache.flink.formats.csv.CsvReaderFormat
 import org.apache.flink.util.Collector
 import org.apache.flinkx.api.StreamExecutionEnvironment
 import org.apache.flinkx.api.semiauto._
 import org.apache.kafka.clients.consumer.ConsumerRecord
 
+import java.time.Duration
 import java.util.ArrayList
 import java.util.List
 
@@ -50,8 +56,31 @@ object UsingOfFlinkKafkaSource {
     env.execute("kafkaSource")
   }
 
+  def csvSource(dir: String): Unit = {
+    val source: FileSource[String] =
+      FileSource
+        .forRecordStreamFormat(new TextLineInputFormat(), new Path(dir))
+        .monitorContinuously(Duration.ofSeconds(5))
+        .build()
+    val env = StreamExecutionEnvironment.getExecutionEnvironment
+    val lines =
+      env.fromSource(source, WatermarkStrategy.noWatermarks(), "Wherever")
+    lines
+      .filter(_.nonEmpty)
+      .map { line =>
+        val split = line.split(",").map(_.trim)
+        s"Line: ${split(0)} - ${split(1)} - ${split(2)}"
+      }
+      .print()
+    env.execute("cvsSource.")
+  }
+
+  def jsonFileSystemSource(dir: String): Unit = {
+    ???
+  }
+
   def main(args: Array[String]): Unit = {
-    kafkaSource()
+    csvSource("/Users/millodev/Files")
   }
 
 }

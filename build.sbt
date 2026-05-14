@@ -1,4 +1,4 @@
-import Dependencies._
+import Dependencies.munit
 
 lazy val scalaVer = "2.13.18"
 lazy val flinkVer = "2.1.1"
@@ -21,6 +21,7 @@ lazy val root = (project in file("."))
       "org.apache.flink" % "flink-connector-files" % flinkVer,
       "org.apache.flink" % "flink-csv" % flinkVer,
       "org.apache.flink" % "flink-connector-kafka" % flinkKafkaConectorVer,
+      "org.apache.flink" % "flink-connector-jdbc" % "3.2.0-1.19" % Test,
       "org.apache.flink" % "flink-statebackend-rocksdb" % flinkVer % Provided,
       "org.scala-lang" % "scala-reflect" % scalaVer,
       "org.slf4j" % "slf4j-api" % "2.0.13",
