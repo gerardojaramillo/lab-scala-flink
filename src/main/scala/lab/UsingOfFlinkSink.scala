@@ -15,13 +15,13 @@ import org.apache.flinkx.api.semiauto.stringInfo
 
 import java.time.Duration
 
-object UsingOfFlink {
+object UsingOfFlinkSink {
 
   def main(args: Array[String]): Unit = {
     require(args.length == 1, "Path argument require.")
     val env = StreamExecutionEnvironment.getExecutionEnvironment
     val dir = new Path(args(0))
-    
+
     val fileSource =
       FileSource
         .forRecordStreamFormat[String](new TextLineInputFormat(), dir)

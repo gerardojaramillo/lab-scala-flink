@@ -27,7 +27,7 @@ import java.time.Duration
 import java.util.ArrayList
 import java.util.List
 
-object UsingOfFlinkKafkaSource {
+object UsingOfFlinkSource {
 
   def kafkaSource(): Unit = {
     val kafkaSource: KafkaSource[String] = KafkaSource
